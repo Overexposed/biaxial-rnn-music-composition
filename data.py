@@ -8,12 +8,12 @@ def startSentinel():
         part_position = [position]
         
         pitchclass = (note + lowerBound) % 12 # 12 notes in an octave including naturals and sharps/flats
-        part_pitchclass = [int(i == pitchclass) for i in range(12)] 
+        part_pitchclass = [int(i == pitchclass) for i in range(12)] # only keeps track of whether a pitch has been played or not
         
         return part_position + part_pitchclass + [0]*66 + [1] # length will be 80, figure out why
     return [noteSentinel(note) for note in range(upperBound-lowerBound)] 
 
-# l is state, i is a value to move up or down from current note
+# l is state, i is a value to move up or down from current note, d is note that gets returned if there is no index i in l
 def getOrDefault(l, i, d):
     try:
         return l[i]
@@ -21,7 +21,7 @@ def getOrDefault(l, i, d):
         return d
 
 # buildContext notes:
-# counts how many of each pitch class in the file
+# context counts how many of each pitch class in the file
 # state is a list of 1x2 lists, list of notestates, stores "memory" of previous note 
 # notestate is a 1x2 list that indicates whether the previous note was played or articulated
 
@@ -38,6 +38,7 @@ def buildBeat(time):
     return [2*x-1 for x in [time%2, (time//2)%2, (time//4)%2, (time//8)%2]]
 
 # beat is output of buildBeat
+# returns input for final model
 def noteInputForm(note, state, context, beat):
     position = note
     part_position = [position]
