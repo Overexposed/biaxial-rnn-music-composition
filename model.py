@@ -87,11 +87,17 @@ class Model(object):
         
         # time network maps from notewise input size to various hidden sizes
         self.time_model = StackedCells( self.t_input_size, celltype=LSTM, layers = t_layer_sizes)
-        self.time_model.layers.append(PassthroughLayer())
+        self.time_model.layers.append(PassthroughLayer()) #add the output layer of time model
         
         # pitch network takes last layer of time model and state of last note, moving upward
         # and eventually ends with a two-element sigmoid layer
-        p_input_size = t_layer_sizes[-1] + 2
+        
+        #The extra 2 input elements are
+        #1. a value (0 or 1) for whether the previous (half-step lower)
+        # note was chosen to be played (based on previous note-step, starts 0)
+        #2. a value (0 or 1) for whether the previous (half-step lower) note was chosen to be articulated 
+        #(based on previous note-step, starts 0)
+        p_input_size = t_layer_sizes[-1] + 2 
         self.pitch_model = StackedCells( p_input_size, celltype=LSTM, layers = p_layer_sizes)
         self.pitch_model.layers.append(Layer(p_layer_sizes[-1], 2, activation = T.nnet.sigmoid))
         
@@ -125,15 +131,19 @@ class Model(object):
         for l, val in zip((l for mod in (self.time_model, self.pitch_model) for l in mod.layers if has_hidden(l)), learned_list[2]):
             l.initial_hidden_state.set_value(val.get_value())
     
-    def setup_train(self):
+    #
+    def setup_train(self):  
 
         # dimensions: (batch, time, notes, input_data) with input_data as in architecture
         self.input_mat = T.btensor4()
         # dimensions: (batch, time, notes, onOrArtic) with 0:on, 1:artic
         self.output_mat = T.btensor4()
         
+        # The smallest representable positive number such that 1.0 + epsilon != 0 in float32 
+        # why need this??
         self.epsilon = np.spacing(np.float32(1.0))
-
+        
+        #get 
         def step_time(in_data, *other):
             other = list(other)
             split = -len(self.t_layer_sizes) if self.dropout else len(other)
