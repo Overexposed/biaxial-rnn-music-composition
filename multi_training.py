@@ -28,9 +28,9 @@ def loadPieces(dirpath):
 
     return pieces
 
-def getPieceSegment(pieces):
-    piece_output = random.choice(pieces.values())
-    start = random.randrange(0,len(piece_output)-batch_len,division_len)
+def getPieceSegment(pieces): #pieces is the dictionary of statematrices
+    piece_output = random.choice(pieces.values()) #randomly choose a piece
+    start = random.randrange(0,len(piece_output)-batch_len,division_len) # randomly choose a start point
     # print "Range is {} {} {} -> {}".format(0,len(piece_output)-batch_len,division_len, start)
 
     seg_out = piece_output[start:start+batch_len]
