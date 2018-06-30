@@ -103,8 +103,8 @@ class Model(object):
         
         self.dropout = dropout
 
-        self.conservativity = T.fscalar()
-        self.srng = T.shared_randomstreams.RandomStreams(np.random.randint(0, 1024))
+        self.conservativity = T.fscalar() #A placeholder for float number
+        self.srng = T.shared_randomstreams.RandomStreams(np.random.randint(0, 1024))#an object that is used to generate random number
 
         self.setup_train()
         self.setup_predict()
@@ -139,11 +139,11 @@ class Model(object):
         # dimensions: (batch, time, notes, onOrArtic) with 0:on, 1:artic
         self.output_mat = T.btensor4()
         
-        # The smallest representable positive number such that 1.0 + epsilon != 0 in float32 
-        # why need this??
+        # The smallest representable positive number such that 1.0 + epsilon != 1.0 in float32 
+        # Probably to avoid 0 in log
         self.epsilon = np.spacing(np.float32(1.0))
         
-        #get 
+        #Feedforward process of time model
         def step_time(in_data, *other):
             other = list(other)
             split = -len(self.t_layer_sizes) if self.dropout else len(other)
@@ -151,7 +151,7 @@ class Model(object):
             masks = [None] + other[split:] if self.dropout else []
             new_states = self.time_model.forward(in_data, prev_hiddens=hiddens, dropout=masks)
             return new_states
-        
+        #Feedforward process of pitch model
         def step_note(in_data, *other):
             other = list(other)
             split = -len(self.p_layer_sizes) if self.dropout else len(other)
@@ -266,7 +266,7 @@ class Model(object):
         
         shouldPlay = self.srng.uniform() < (probabilities[0] ** self.conservativity)
         shouldArtic = shouldPlay * (self.srng.uniform() < probabilities[1])
-        
+         
         chosen = T.cast(T.stack(shouldPlay, shouldArtic), "int8")
         
         return ensure_list(new_states) + [chosen]
